@@ -1,0 +1,43 @@
+---@class bs__Vector
+local vector = {}
+
+---@param vec tts__Vector
+---@param position tts__Vector
+---@param rotation tts__Vector
+function vector.toWorld(vec, position, rotation)
+    vec:rotateOver("x", rotation.x)
+    vec:rotateOver("y", rotation.y)
+    vec:rotateOver("z", rotation.z)
+
+    vec:add(position)
+
+    return vec
+end
+
+---@param vec tts__Vector
+---@param position tts__Vector
+---@param rotation tts__Vector
+function vector.toLocal(vec, position, rotation)
+    vec:sub(position)
+
+    vec:rotateOver("x", -rotation.x)
+    vec:rotateOver("y", -rotation.y)
+    vec:rotateOver("z", -rotation.z)
+
+    return vec
+end
+
+---@param vec1 tts__Vector
+---@param vec2 tts__Vector
+---@param step number
+---@return tts__Vector
+function vector.lerp(vec1, vec2, step)
+    vec1.x = vec1.x + (vec2.x - vec1.x) * step
+    vec1.y = vec1.y + (vec2.y - vec1.y) * step
+    vec1.z = vec1.z + (vec2.z - vec1.z) * step
+
+
+    return vec1
+end
+
+return vector

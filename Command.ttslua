@@ -1,0 +1,59 @@
+local Event = require("BeaverStash.Event")
+local String = require("BeaverStash.String")
+local Log = require("BeaverStash.Log")
+
+---@class bs__Command
+local Command = {}
+
+---@type table<string, {exec: (fun(ply: tts__Player, args: string[]): void), admin: boolean}>
+local commands = {}
+
+---@overload fun(cmd: string, handle: (fun(ply: tts__Player, args: string[]): void))
+---@param cmd string
+---@param handle fun(ply: tts__Player, args: string[]): void
+---@param admin boolean
+function Command.add(cmd, handle, admin)
+    admin = admin == true
+    if cmd == nil then return end
+    cmd = cmd:lower()
+    if commands[cmd] then return end
+
+    commands[cmd] = {
+        exec = handle,
+        admin = admin
+    }
+end
+
+---@param cmd string
+function Command.remove(cmd)
+    if cmd == nil then return end
+    cmd = cmd:lower()
+    commands[cmd] = nil
+end
+
+local prefix = "!"
+
+---@param msg string
+---@param ply tts__Player
+function Command.onChat(msg, ply)
+    if msg:sub(1, prefix:len()) ~= prefix then return true end
+    
+    local args = String.split(msg:sub(prefix:len() + 1))
+    local cmd = table.remove(args, 1):lower()
+    
+    if commands[cmd] ~= nil then
+        if not commands[cmd].admin or commands[cmd].admin == ply.admin then
+            local success, error = pcall(commands[cmd].exec, ply, args)
+
+            if not success then
+                print("[ff0000]".. error)
+            end
+        end
+    end
+
+    return false
+end
+
+Event.add("onChat", Command.onChat)
+
+return Command

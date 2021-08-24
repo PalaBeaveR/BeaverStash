@@ -1,0 +1,40 @@
+local BUI = require("BeaverStash.BUI")
+local BSColor = require("BeaverStash.Color")
+
+---@class bs__BUIText : bs__BUIElement
+local BUIText = {}
+
+function BUIText:setContentType(type)
+    self:setAttribute("contentType", type)
+end
+
+function BUIText:setText(text)
+    self:setAttribute("text", text)
+end
+
+function BUIText:getText()
+    return self.attributes.text or ""
+end
+
+function BUIText:setTextColor(color)
+    self:setAttribute("color", "#".. color:toHex())
+end
+
+function BUIText:setFontSize(size)
+    self:setAttribute("fontSize", size)
+end
+
+function BUIText:onParentChanged(parent)
+    if BSColor.getPerceivedBrightness(parent.attributes.color or "#000000FF") > 75 then
+        self:setTextColor(Color.Black)
+    else
+        self:setTextColor(Color.White)
+    end
+end
+
+BUI.registerTemplate("BUIText", {
+    tag = "Text",
+    attributes = {
+        color = "#FFFFFF"
+    }
+}, BUIText)

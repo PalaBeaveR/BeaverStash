@@ -1,0 +1,62 @@
+---@class bs__Color
+local BSColor = {}
+
+---@param color string | tts__Color
+function BSColor.parse(color)
+    if type(color) == "string" then
+        if (--[[---@type string]]color):find("^rgb%(%s*%d+%s*,%s*%d+%s*,%s*%d+%s*%)$") then
+            local r, g, b = --[[---@type string, string, string ]](--[[---@type string]]color):match("^rgb%(%s*(%d+)%s*,%s*(%d+)%s*,%s*(%d+)%s*%)$")
+
+            return Color(
+                (tonumber(r) or 0) / 255,
+                (tonumber(g) or 0) / 255,
+                (tonumber(b) or 0) / 255
+            )
+        elseif (--[[---@type string]]color):find("^rgba%(%s*%d+%s*,%s*%d+%s*,%s*%d+%s*,%s*%d+%s*%)$") then
+            local r, g, b, a = --[[---@type string, string, string, string ]](--[[---@type string]]color):match("^rgba%(%s*(%d+)%s*,%s*(%d+)%s*,%s*(%d+)%s*,%s*(%d+)%s*%)$")
+            return Color(
+                (tonumber(r) or 0) / 255,
+                (tonumber(g) or 0) / 255,
+                (tonumber(b) or 0) / 255,
+                (tonumber(a) or 255) / 255
+            )
+
+        elseif (--[[---@type string]]color):find("^#?%x%x%x%x%x%x%x?%x?$") then
+            local r, g, b, a = --[[---@type string, string, string, string ]](--[[---@type string]]color):match("^#?(%x%x)(%x%x)(%x%x)(%x?%x?)$")
+            return Color(
+                (tonumber(r, 16) or 0) / 255,
+                (tonumber(g, 16) or 0) / 255,
+                (tonumber(b, 16) or 0) / 255,
+                ((a:len() == 2 and tonumber(a, 16)) or 255) / 255
+            )
+        end
+    end
+end
+
+---@param colorChannel number
+function BSColor.sRGBToLinear(colorChannel)
+    if colorChannel <= 0.04045 then
+        return colorChannel / 12.92
+    else
+        return ((colorChannel + 0.055) / 1.055) ^ 2.4
+    end
+end
+
+---@param color tts__Color
+function BSColor.getLuminance(color)
+    color = (color.__isColor and color) or BSColor.parse(color)
+    return 0.2126 * BSColor.sRGBToLinear(color.r) + 0.7152 * BSColor.sRGBToLinear(color.g) + 0.0722 * BSColor.sRGBToLinear(color.b)
+end
+
+---@param color tts__Color
+function BSColor.getPerceivedBrightness(color)
+    local luminance = BSColor.getLuminance(color)
+
+    if  luminance <= (216 / 24389) then
+        return luminance * (24389 / 27)
+    else
+        return luminance ^ (1 / 3) * 116 - 16
+    end
+end
+
+return BSColor

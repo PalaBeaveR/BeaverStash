@@ -1,0 +1,169 @@
+
+---@class bs__Table
+local Table = {}
+
+function Table.findValue() end
+
+function Table.isArray(tbl)
+    return tbl[1] ~= nil
+end
+
+---@generic K, V
+---@param tbl table<K, V>
+---@return fun(tbl: table<K, V>, k: K): nil | (K, V), table<K, V>, K
+function Table.iter(tbl)
+    if Table.isArray(tbl) then
+        return --[[---@type fun(tbl: table<K, V>, k: K): nil | (K, V), table<K, V>, K ]]ipairs(--[[---@type V[] ]]tbl)
+    else
+        return pairs(tbl)
+    end
+end
+
+---@generic K, V
+---@param tbl table<K, V>
+---@param ind K
+---@return V
+function Table.removeIndex(tbl, ind)
+    if Table.isArray(tbl) then
+        return table.remove(--[[---@type V[] ]]tbl, --[[---@type number ]]k)
+    else
+        local rtVal = tbl[ind]
+        tbl[ind] = nil
+
+        return rtVal
+    end
+end
+
+---@generic K, V
+---@overload fun<V>(tbl: V[], val: V): number
+---@param tbl table<K, V>
+---@param val V
+---@return K
+function Table.removeValue(tbl, val)
+    local found = Table.find(tbl, val)
+    Table.removeIndex(tbl, found)
+
+    return found
+end
+
+---@generic K, V
+---@overload fun<V>(tbl: V[], val: V): number
+---@param tbl table<K, V>
+---@param val V
+---@return K
+function Table.find(tbl, val)
+    for k, v in Table.iter(tbl) do
+        if v == val then
+            return k
+        end
+    end
+end
+
+---@generic K
+---@overload fun(tbl: string[], sep: string): string
+---@param tbl table<K, string>
+---@param sep string
+---@return string
+function Table.concat(tbl, sep)
+    local str = ""
+
+    local skippedFirst = false
+    for k, v in Table.iter(tbl) do
+        if not skippedFirst then
+            str = str + sep
+        end
+
+        skippedFirst = true
+
+        str = str + v
+    end
+
+    return str
+end
+
+---@generic V
+---@param tbl table<string, V>
+---@param sep string
+---@return string
+function Table.concatKeys(tbl, sep)
+    local str = ""
+
+    local skippedFirst = false
+    for k, v in Table.iter(tbl) do
+        if not skippedFirst then
+            str = str + sep
+        end
+
+        skippedFirst = true
+
+        str = str + k
+    end
+
+    return str
+end
+
+---@overload fun<V>(tbl: V[], fun(total: number, v: V, k: number, tbl: table<K, V>): number)
+---@generic K, V
+---@param tbl table<K, V>
+---@param fn fun(total: number, v: V, k: K, tbl: table<K, V>): number
+function Table.reduce(tbl, fn)
+    local total= 0
+
+    for k, v in Table.iter(tbl) do
+        total = fn(total, v, k, tbl)
+    end
+
+    return total
+end
+
+function Table.len(tbl)
+    local len = 0
+
+    for k, v in Table.iter(tbl) do
+        len = len + 1
+    end
+
+    return len
+end
+
+---@generic K, V
+---@param tbl1 table<K, V>
+---@param tbl2 table<K, V>
+---@return table<K, V>
+---@overload fun<V>(tbl1: V[], tbl2: V[]): V[]
+function Table.append(tbl1, tbl2)
+    if Table.isArray(tbl1) then
+        for k, v in Table.iter(tbl2) do
+            table.insert(--[[---@type V[] ]]tbl1, v)
+        end
+    else
+        for k, v in Table.iter(tbl2) do
+            tbl1[k] = v
+        end
+    end
+
+    return tbl1
+end
+
+---@generic K, V
+---@param tbl table<K, V>
+---@overload fun<K, V>(tbl: table<K, V>) : table<K, V>
+---@return table<K, V>
+function Table.copy(tbl, recursive)
+    recursive = recursive == true and true or false
+
+    ---@type table<K, V>
+    local newTbl = {}
+
+    for k, v in pairs(tbl) do
+        if type(v) == "table" and recursive then
+            newTbl[k] = --[[---@type V]]Table.copy(--[[---@type table]]v, true)
+        else
+            newTbl[k] = v
+        end
+    end
+
+    return newTbl
+end
+
+return Table

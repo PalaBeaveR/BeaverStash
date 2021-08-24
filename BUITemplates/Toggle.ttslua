@@ -1,0 +1,42 @@
+local BUI = require("BeaverStash.BUI")
+
+---@class bs__BUIToggle : bs__BUIElement
+---@field onClick fun(btn: self, player: tts__Player, btnCode: "3" | "2" | "1" | "-1" | "-2" | "-3")
+local BUIToggle = {}
+
+function BUIToggle:getIsOn()
+    return self.attributes.isOn or false
+end
+
+---@param isOn boolean
+function BUIToggle:setIsOn(isOn)
+    self:setAttribute("isOn", isOn)
+end
+
+function BUIToggle:setText(text)
+    self:setAttribute("text", text)
+end
+
+function BUIToggle:getText()
+    return self.attributes.text
+end
+
+function BUIToggle:setInteractable(interactable)
+    self:setAttribute("interactable", interactable)
+end
+
+function BUIToggle:_onCreated()
+    self:setText("Placeholder Text")
+end
+
+function BUIToggle:__onValueChanged(ply, value)
+    self:setAttribute("isOn", value == "True")
+end
+
+BUI.registerTemplate("BUIToggle", {
+    tag = "Toggle",
+    attributes = {
+        color = "#5A5A5A",
+        textColor = "#FFFFFF"
+    }
+}, BUIToggle)

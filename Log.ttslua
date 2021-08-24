@@ -1,0 +1,58 @@
+
+---@class bs__Log
+---@field VERBOSE fun(msg: string, ...: string)
+---@field INFO fun(msg: string, ...: string)
+---@field ERROR fun(msg: string, ...: string)
+local Log = {}
+
+---@alias bs__LogLevel 0 | 1 | 2
+
+Log.Level = {
+    VERBOSE = 0,
+    INFO = 1,
+    ERROR = 2,
+}
+
+local curFilterLevel = 1
+
+---@param level bs__LogLevel
+function Log.setFilterLevel(level)
+    curFilterLevel = level
+end
+
+for k, v in pairs(Log.Level) do
+    ;(--[[---@type table ]]Log)[k] = function(msg, ...)
+        if Log.Level[k] >= curFilterLevel then
+            log(("[%s] "):format(k).. msg:format(...))
+        end
+    end
+end
+
+---@param msg string
+---@vararg string
+function Log.ERROR(msg, ...)
+    if Log.Level.ERROR >= curFilterLevel then
+        log("[ERROR] ".. msg:format(...))
+        print("[ERROR] ".. msg:format(...))
+    end
+end
+
+---@param condition boolean
+---@param msg string
+---@vararg string
+function Log.ASSERT(condition, msg, ...)
+    if condition then
+        error(msg:format(...), 1)
+    end
+end
+
+---@param condition boolean
+---@param msg string
+---@vararg string
+function Log.ASSERT_U(condition, msg, ...)
+    if condition then
+        error(msg:format(...), 0)
+    end
+end
+
+return Log

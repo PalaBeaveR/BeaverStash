@@ -1,0 +1,31 @@
+local Event = require("BeaverStash.Event")
+
+---@type table<string, table>
+local languages = {
+    current = {},
+    EN = {xd = "hello"},
+    RU = {xd = "Sup"}
+}
+
+---@class bs__Language
+local Language = {}
+
+---@param lang string
+function Language.setCurrentLanguage(lang)
+    languages.current = languages[lang]
+    Event.invoke("onLanguageChanged")
+end
+
+---@param name string
+---@param lang table
+function Language.addLanguage(name, lang)
+    languages[name] = lang
+end
+
+setmetatable(Language, {
+    ---@param tbl table
+    ---@param key string
+    __index = function(tbl, key) return rawget(tbl, key) or languages.current[key] end
+})
+
+return Language

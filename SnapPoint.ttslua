@@ -1,0 +1,53 @@
+local Parameters = require("BeaverStash.Parameters")
+local vector = require("BeaverStash.vector")
+
+---@class bs__SnapPoint
+local SnapPoint = {}
+
+function SnapPoint.create()
+
+end
+
+---@shape bs__SnapPoint_createGridParams
+---@field origin tts__Vector
+---@field originRotation tts__Vector
+---@field pointRotation tts__Vector | nil @Default: Vector(0, 0, 0)
+---@field spacing tts__Vector
+---@field rows number
+---@field columns number
+---@field rotation_snap boolean | nil @Default: true
+---@field tags string[]
+---@field hAnchor number | nil @Default: 0.5
+---@field vAnchor number | nil @Default: 0.5
+
+---@param snapPoints tts__Object_SnapPointParameters[]
+---@param params bs__SnapPoint_createGridParams
+function SnapPoint.createGrid(snapPoints, params)
+    Parameters.default(params, {
+        pointRotation = Vector(0, 0, 0),
+        hAnchor = 0.5,
+        vAnchor = 0.5,
+        rotation_snap = true,
+    })
+
+    local startingPosition = Vector(0, 0, 0)
+
+    startingPosition:sub(params.spacing)
+    startingPosition:scale(Vector(params.columns * params.hAnchor + 0.5, 0, params.rows * params.vAnchor + 0.5))
+
+    for r = 1, params.rows do
+        for c = 1, params.columns do
+            local position = startingPosition:copy()
+            position:add(params.spacing * Vector(c, 0, r))
+
+            table.insert(snapPoints, --[[---@type tts__Object_SnapPoint ]]{
+                position = vector.toWorld(position, params.origin, params.originRotation),
+                rotation = params.originRotation + params.pointRotation,
+                rotation_snap = params.rotation_snap,
+                tags = params.tags
+            })
+        end
+    end
+end
+
+return SnapPoint

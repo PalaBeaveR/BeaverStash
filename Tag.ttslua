@@ -1,0 +1,51 @@
+local Event = require("BeaverStash.Event")
+local SaveManager = require("BeaverStash.SaveManager")
+
+---@class bs__Tagger
+local Tag = {}
+
+---@alias bs__TagValidator fun(obj: tts__Object): boolean
+
+---@type table<string, bs__TagValidator>
+local customTags = {}
+
+---@param tag string
+---@param validator bs__TagValidator
+function Tag.add(tag, validator)
+    if customTags[tag] then return end
+
+    customTags[tag] = validator
+
+    for _, obj in ipairs(getObjects()) do
+        if obj.type ~= "Hand" and validator(obj) then
+            obj.addTag(tag)
+            Event.invoke("onObjectSetupTag", obj, tag)
+        end
+    end
+end
+
+---@param obj tts__Object
+function Tag.setupOnObject(obj)
+    if obj.type == "Hand" then return end
+    local type = ("Type: %s"):format(obj.type)
+    obj.addTag(type)
+    Event.invoke("onObjectSetupTag", obj, type)
+
+    for tag, validator in pairs(customTags) do
+        if validator(obj) then
+            obj.addTag(tag)
+            Event.invoke("onObjectSetupTag", obj, tag)
+        end
+    end
+end
+
+function Tag.setup()
+    for _, obj in ipairs(getObjects()) do
+        Tag.setupOnObject(obj)
+    end
+end
+
+Event.add("onObjectSpawn", Tag.setupOnObject)
+SaveManager.addOnLoad("Tagger", Tag.setup)
+
+return Tag

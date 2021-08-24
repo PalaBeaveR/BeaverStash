@@ -1,0 +1,34 @@
+local BUI = require("BeaverStash.BUI")
+
+---@class bs__BUIVerticalLayout : bs__BUIElement
+local BUIVerticalLayout = {}
+
+function BUIVerticalLayout:setExpandHeight(expand)
+    self:setAttribute("childForceExpandHeight", expand)
+end
+
+---@overload fun(padding: number)
+---@overload fun(left: number, right: number, top: number, bottom: number)
+---@overload fun(left: number, right: number, top_bottom: number)
+---@overload fun(left: number, right_top_bottom: number)
+---@vararg number
+function BUIVerticalLayout:setPadding(...)
+    self:setAttribute("padding", table.concat({...}, " "))
+end
+
+---@overload fun(spacing: number)
+---@overload fun(horizontal: number, vertical: number)
+---@vararg number
+function BUIVerticalLayout:setSpacing(...)
+    self:setAttribute("spacing", table.concat({...}, " "))
+end
+
+BUI.registerTemplate("BUIVerticalLayout", {
+    tag = "VerticalLayout",
+    attributes = {
+        color = "#3C3C3C",
+        outline = "White",
+        outlineSize = "1",
+        onClick = ""
+    }
+}, BUIVerticalLayout)

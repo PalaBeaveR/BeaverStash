@@ -1,0 +1,47 @@
+
+---@class bs__SaveManager
+local SaveManager = {}
+
+---@alias bs__OnLoadCallback fun(json: string | nil): void
+---@alias bs__OnSaveCallback fun(): string | nil
+
+---@type table<string, bs__OnLoadCallback>
+local onLoadCallbacks = {}
+---@type table<string, bs__OnSaveCallback>
+local onSaveCallbacks = {}
+
+---@param module string
+---@param onLoad bs__OnLoadCallback
+function SaveManager.addOnLoad(module, onLoad)
+    if onLoadCallbacks[module] then return end
+    onLoadCallbacks[module] = onLoad
+end
+
+---@param module string
+---@param onSave bs__OnSaveCallback
+function SaveManager.addOnSave(module, onSave)
+    if onSaveCallbacks[module] then return end
+    onSaveCallbacks[module] = onSave
+end
+
+---@return string
+function onSave()
+
+end
+
+---@param save string
+function onLoad(save)
+    for module, callback in pairs(onLoadCallbacks) do
+        if module:sub(1, 1) == "!" then
+            callback(nil)
+        end
+    end
+
+    for module, callback in pairs(onLoadCallbacks) do
+        if module:sub(1, 1) ~= "!" then
+            callback(nil)
+        end
+    end
+end
+
+return SaveManager

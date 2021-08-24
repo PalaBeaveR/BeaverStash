@@ -1,0 +1,54 @@
+local objects = {}
+
+---@shape bs__ObjectZoneOptions
+---@field position tts__Vector
+---@field type tts__ObjectType
+---@field radius number | nil
+
+---@class bs__ObjectZone
+---@field position tts__Vector
+---@field type tts__ObjectType
+---@field radius number
+---@field obj tts__Object
+---@overload fun(ops: bs__ObjectZoneOptions): bs__ObjectZone
+local ObjectZone = {}
+ObjectZone.__index = ObjectZone
+
+---@param ops bs__ObjectZoneOptions
+---@return bs__ObjectZone
+function ObjectZone:new(ops)
+    ops = ops or {}
+    ops.radius = ops.radius or 1
+    
+    setmetatable(ops, self)
+
+    table.insert(objects, ops)
+    
+    return --[[---@type bs__ObjectZone ]]ops
+end
+
+setmetatable(ObjectZone, {__call = ObjectZone.new})
+
+---@return tts__Object | nil
+function ObjectZone:find()
+    local minDistance = 9999
+    ---@type tts__Object
+    local closestObj
+
+    for _, obj in pairs(getObjects()) do
+        if obj.type == self.type then
+            local distance = self.position:distance(obj.getPosition())
+
+            if distance <= self.radius and distance < minDistance then
+                minDistance = distance
+                closestObj = obj
+            end
+        end
+    end
+
+    self.obj = closestObj
+
+    return self.obj
+end
+
+return ObjectZone

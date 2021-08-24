@@ -1,0 +1,11 @@
+local BUI = require("BeaverStash.BUI")
+
+---@class bs__BUIPanel : bs__BUIElement
+local BUIPanel = {}
+
+BUI.registerTemplate("BUIPanel", {
+    tag = "Panel",
+    attributes = {
+        color = "#3C3C3C"
+    }
+}, BUIPanel)

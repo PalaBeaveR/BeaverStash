@@ -1,0 +1,19 @@
+---@class bs__Parameters
+local Parameters = {}
+
+---@generic P
+---@param params P
+---@param defaults P
+function Parameters.default(params, defaults)
+    params = params or {}
+
+    for k, v in pairs(--[[---@type table ]]defaults) do
+        if (--[[---@type table ]]params)[k] == nil then
+            ;(--[[---@type table ]]params)[k] =  v
+        end
+    end
+
+    return params
+end
+
+return Parameters

@@ -1,0 +1,32 @@
+local BUI = require("BeaverStash.BUI")
+
+---@class bs__BUIInputField : bs__BUIElement
+local BUIInputField = {}
+
+function BUIInputField:setContentType(type)
+    self:setAttribute("contentType", type)
+end
+
+function BUIInputField:setPlaceholderText(text)
+    self:setAttribute("placeholderText", text)
+end
+
+function BUIInputField:__onValueChanged(player, value)
+    self.value = value
+end
+
+function BUIInputField:getInputText()
+    return tostring(self.value)
+end
+
+function BUIInputField:getInputNumber()
+    return tonumber(self.value)
+end
+
+BUI.registerTemplate("BUIInputField", {
+    tag = "InputField",
+    attributes = {
+        color = "#5A5A5A",
+        textColor = "#FFFFFF"
+    }
+}, BUIInputField)

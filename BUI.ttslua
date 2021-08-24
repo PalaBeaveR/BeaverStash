@@ -1,0 +1,395 @@
+local Table = require("BeaverStash.Table")
+
+---@class bs__BUIElement
+---@field template string
+---@field children bs__BUIElement[]
+---@field parent bs__BUIElement
+---@field attributes table<string, any>
+---@field id string
+---@field initialized boolean
+---@field color tts__PlayerColor
+local BUIElement = {}
+BUIElement.__index = BUIElement
+
+local BUI = {}
+
+---@type table<string, {template: table, class: table}>
+local BUITemplates = {}
+
+---@type bs__BUIElement[]
+local BUIElements = {}
+
+local redrawScheduled = false
+
+---@param elem bs__BUIElement
+---@return table
+local function constructElement(elem)
+    local children = {}
+
+    for k, v in ipairs(elem.children) do
+        table.insert(children, constructElement(v))
+    end
+
+    local constructedElement = {
+        tag = BUITemplates[elem.template].template.tag,
+        attributes = Table.append({
+            class = elem.template,
+            id = elem.id
+        }, elem.attributes),
+        children = children
+    }
+
+    return constructedElement
+end
+
+local function scheduleUIRedraw()
+    if redrawScheduled then return end
+    redrawScheduled = true
+
+    Wait.frames(function()
+        redrawScheduled = false
+
+        ---@type table<any, any>[]
+        local defaults = {}
+
+        ---@type table<string, boolean>
+        local defaultsLoaded = {}
+
+        local UITable = {}
+
+        for _, elem in pairs(BUIElements) do
+            if not defaultsLoaded[elem.template] then
+                table.insert(defaults, Table.copy(BUITemplates[elem.template].template))
+                defaultsLoaded[elem.template] = true
+            end
+
+            if elem.parent == nil then
+                table.insert(UITable, constructElement(elem))
+            end
+            elem.initialized = true
+        end
+
+        UI.setXmlTable({
+            {
+                tag = "Defaults",
+                children = defaults
+            },
+            table.unpack(UITable)
+        })
+    end, 1)
+end
+
+---@shape BUIElementArgs
+---@field template string
+
+local IDCounter = 0
+
+---@param ops BUIElementArgs
+function BUIElement:new(ops)
+    ---@type bs__BUIElement
+    local element = --[[---@type bs__BUIElement]]ops or {}
+    element.children = element.children or {}
+    element.attributes = element.attributes or {}
+    element.initialized = false
+
+    if element.id == nil then
+        element.id = "PlaceholderID".. IDCounter
+        IDCounter  = IDCounter + 1
+    end
+
+    if BUITemplates[element.template].class ~= nil then
+        setmetatable(element, BUITemplates[element.template].class)
+        for k, v in pairs(BUITemplates[element.template].class) do
+            if k:sub(1, 2) == "on" then
+                element:initializeEventHandler(k)
+            elseif k:sub(1, 4) == "__on" then
+                element:initializeEventHandler(k:sub(3))
+            end
+        end
+    else
+        setmetatable(element, self)
+    end
+
+    if element._onCreated then
+        element:_onCreated()
+    end
+
+    table.insert(BUIElements, element)
+    scheduleUIRedraw()
+
+    return element
+end
+
+local G = --[[---@type table<any, any>]]_G
+
+function BUIElement:initializeEventHandler(event)
+    local address = event.. self.id.. "EventHandler"
+    G[address] = function(...)
+        if (--[[---@type table<any, any>]]self)["__".. event] then
+            (--[[---@type table<any, any>]]self)["__".. event](self, ...)
+        end
+        if (--[[---@type table<any, any>]]self)[event] then
+            (--[[---@type table<any, any>]]self)[event](self, ...)
+        end
+    end
+    self:setAttribute(event, address)
+end
+
+function BUIElement:__newindex(key, value)
+    if key:sub(1, 2) == "on" then
+        self:initializeEventHandler(key)
+    end
+    rawset(self, key, value)
+end
+
+setmetatable(BUIElement, {__call = BUIElement.new, __newindex = BUIElement.__newindex})
+
+---@param parent bs__BUIElement | bs__BUIElementSeatManager<bs__BUIElement>
+function BUIElement:setParent(parent)
+    if (--[[---@type bs__BUIElementSeatManager<bs__BUIElement> ]]parent).isSeatManager and self.color ~= nil then -- TODO: make an error when trying to parent a non seat manager element to a seat manager element
+        parent = (--[[---@type bs__BUIElementSeatManager<bs__BUIElement> ]]parent):getSeatElement(self.color)
+    end
+
+    if self.parent ~= nil then
+        local foundSelfAt = Table.find((--[[---@type bs__BUIElement ]]parent).children, self)
+
+        if foundSelfAt then return end
+        table.remove((--[[---@type bs__BUIElement ]]parent).children, foundSelfAt)
+    end
+
+    self.parent = (--[[---@type bs__BUIElement ]]parent)
+
+    if self.parent ~= nil then
+        table.insert(self.parent.children, self)
+    end
+
+    if self.onParentChanged then
+        self:onParentChanged(parent)
+    end
+end
+
+---@param name string
+---@param value boolean | number | string
+function BUIElement:setAttribute(name, value)
+    self.attributes[name] = value
+    if self.initialized then
+        UI.setAttribute(self.id, name, value)
+    end
+
+    if self["onAttribute".. name.. "Changed"] then
+        self["onAttribute".. name.. "Changed"](value)
+    end
+end
+
+---@param x number
+---@param y number
+function BUIElement:setPos(x, y)
+    self:setAttribute("offsetXY", x.. " ".. y)
+end
+
+---@param width number
+---@param height number
+function BUIElement:setSize(width, height)
+    self:setAttribute("width", width)
+    self:setAttribute("height", height)
+end
+
+---@param minWidth number
+---@param minHeight number
+function BUIElement:setMinSize(minWidth, minHeight)
+    self:setAttribute("minWidth", minWidth)
+    self:setAttribute("minHeight", minHeight)
+end
+
+function BUIElement:setRotation(angle)
+    angle = angle * -1
+    self:setAttribute("rotation", "0 0 ".. angle)
+end
+
+---@param color tts__Color
+function BUIElement:setBackgroundColor(color)
+    self:setAttribute("color", "#".. (--[[---@type string ]]color:toHex()))
+end
+
+---@param active boolean
+function BUIElement:setActive(active)
+    self:setAttribute("active", active)
+end
+
+---@return boolean
+function BUIElement:getActive()
+    if self.attributes.active == nil then return true end
+    return self.attributes.active
+end
+
+---@param allowed boolean
+function BUIElement:setAllowDragging(allowed)
+    self:setAttribute("allowDragging", allowed)
+end
+
+---@param ret boolean
+function BUIElement:setReturnToOriginalPositionWhenReleased(ret)
+    self:setAttribute("returnToOriginalPositionWhenReleased", ret)
+end
+
+---@param alignment string
+---Options are:
+---```
+---UpperLeft
+---UpperCenter
+---UpperRight
+---MiddleLeft
+---MiddleCenter
+---MiddleRight
+---LowerLeft
+---LowerCenter
+---LowerRight
+---```
+function BUIElement:setRectAlignment(alignment)
+    self:setAttribute("rectAlignment", alignment)
+end
+
+---@param ignore boolean
+function BUIElement:setIgnoreLayout(ignore)
+    self:setAttribute("ignoreLayout", ignore)
+end
+
+---@param color tts__Color
+function BUIElement:setOutlineColor(color)
+    self:setAttribute("outline", "#".. color:toHex())
+end
+
+---@param size number
+function BUIElement:setOutlineSize(size)
+    self:setAttribute("outlineSize", size)
+end
+
+---@param horizontal number
+---@param vertical number
+function BUIElement:setPivot(horizontal, vertical)
+    self:setAttribute("pivot", table.concat({horizontal, vertical}, " "))
+end
+
+---@param direction "vertical" | "horizontal" | "both" | "none"
+function BUIElement:setContentSizeFitter(direction)
+    self:setAttribute("contentSizeFitter", direction)
+end
+
+---@overload fun(target: string)
+---@param targets string[]
+function BUIElement:setVisibility(targets)
+    if type(targets) == "table" then
+        self:setAttribute("visibility", table.concat(targets, "|"))
+    else
+        self:setAttribute("visibility", --[[---@type string ]]targets)
+    end
+end
+
+function BUIElement:destroy()
+    table.remove(BUIElements, Table.find(BUIElements, self))
+end
+
+---@overload fun(templateName: string, id: string) : bs__BUIElement
+---@param templateName string
+---@param id string
+---@param parent bs__BUIElement | bs__BUIElementSeatManager<bs__BUIElement>
+---@return bs__BUIElement
+function BUI.createElement(templateName, id, parent)
+    local element = BUIElement:new({
+        template = templateName,
+        id = id
+    })
+
+    if parent ~= nil then element:setParent(parent) end
+
+    return element
+end
+
+
+---@class bs__BUIElementSeatManager<T>
+---@field template string
+---@field seatElements table<tts__PlayerColor, T>
+---@field id string
+---@field parent bs__BUIElement | bs__BUIElementSeatManager<bs__BUIElement>
+local BUIElementSeatManager = {
+    isSeatManager = true
+}
+BUIElementSeatManager.__index = BUIElementSeatManager
+
+---@param ops table
+function BUIElementSeatManager:new(ops)
+    local element = --[[---@type bs__BUIElementSeatManager<T>]]ops or {}
+    element.seatElements = {}
+
+    for k, v in pairs(Player.getColors()) do
+        element.seatElements[v] = --[[---@type T ]]BUI.createElement(element.template, v.. element.id, element.parent)
+        ;(--[[---@type bs__BUIElement ]]element.seatElements[v]).color = v
+    end
+
+    setmetatable(element, self)
+
+    return element
+end
+
+setmetatable(BUIElementSeatManager, {__call = BUIElementSeatManager.new})
+
+---@param func fun(el: T)
+function BUIElementSeatManager:executeOnAll(func)
+    for k, v in pairs(self.seatElements) do
+        func(v)
+    end
+end
+
+function BUIElementSeatManager:enableSeatVisibility()
+    for k, v in pairs(self.seatElements) do
+        v:setVisibility(k)
+    end
+end
+
+---@param color tts__PlayerColor
+function BUIElementSeatManager:getSeatElement(color)
+    return self.seatElements[color]
+end
+
+---@param parent bs__BUIElement | bs__BUIElementSeatManager<bs__BUIElement>
+function BUIElementSeatManager:setParent(parent)
+    self.parent = parent
+    for k, v in pairs(self.seatElements) do
+        (--[[---@type bs__BUIElement ]]v):setParent(parent)
+    end
+end
+
+---@generic T
+---@overload fun<T>(templateName: string, id: string) : bs__BUIElementSeatManager<T>
+---@param templateName string
+---@param id string
+---@param parent bs__BUIElement | bs__BUIElementSeatManager<bs__BUIElement>
+---@return bs__BUIElementSeatManager<T>
+function BUI.createElementSeatManager(templateName, id, parent)
+    local element = BUIElementSeatManager:new({
+        template = templateName,
+        id = id
+    })
+
+    if parent ~= nil then element:setParent(parent) end
+
+    return element
+end
+
+-- TODO: Implement inheritance
+---@param templateName string
+---@param template table
+function BUI.registerTemplate(templateName, template, customClass)
+    template.attributes.class = templateName
+    if customClass ~= nil then
+        customClass.__index = customClass
+        customClass.__newindex = BUIElement.__newindex
+        setmetatable(customClass, BUIElement)
+    end
+    BUITemplates[templateName] = {
+        template = template,
+        class = customClass
+    }
+end
+
+return BUI

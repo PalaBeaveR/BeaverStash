@@ -1,0 +1,17 @@
+---@class bs__String
+local String = {}
+
+---@overload fun(str: string): string[]
+---@param str string
+---@param sep string
+---@return string[]
+function String.split(str, sep)
+    sep = sep or "%s"
+    local t={}
+    for str in string.gmatch(str, "([^"..sep.."]+)") do
+        table.insert(t, str)
+    end
+    return t
+end
+
+return String

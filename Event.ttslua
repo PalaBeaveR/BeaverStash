@@ -1,0 +1,78 @@
+local Table = require("BeaverStash.Table")
+
+---@type table<string, any>
+local valueToPrevent = {
+    onChat = false,
+    onPlayerAction = false,
+}
+
+---@type table<string, function[]>
+local eventHandlers = {}
+
+local globalHandlers = --[[---@type {[string]: function | nil} ]]_G
+
+---@param event string
+local function getHandlers(event)
+    local handlers = eventHandlers[event]
+    if handlers ~= nil then return handlers end
+
+    eventHandlers[event] = {}
+
+    ---@type std__Packed<any>
+    local finalOutput
+
+    ---@vararg any
+    ;(--[[---@type table<any, any>]] _G)[event] = function(...)
+        for i, handler in ipairs(eventHandlers[event]) do
+            local output = table.pack(handler(...))
+
+            if output.n > 0 then
+                finalOutput = output
+                if
+                (valueToPrevent[event] ~= nil and valueToPrevent[event] == output[1])
+                or
+                (event:sub(1, 3) == "try" and output[1] == false) then
+                    break
+                end
+            end
+        end
+
+        if finalOutput then
+            return table.unpack(finalOutput) -- FIXME: if one of the handlers blocks the action it may be overwritten by other handlers
+        end
+    end
+
+
+    return eventHandlers[event]
+end
+
+---@class bs__Event
+local Event = {}
+
+---@param event string
+---@param handler function
+function Event.add(event, handler)
+    local handlers = getHandlers(event)
+
+    table.insert(handlers, handler)
+end
+
+---@param event string
+---@param handler function
+function Event.remove(event, handler)
+    local handlers = getHandlers(event)
+
+    Table.removeValue(handlers, handler)
+end
+
+---@param event string
+---@vararg any
+function Event.invoke(event, ...)
+    local handler = globalHandlers[event]
+
+    if handler then
+        (--[[---@not nil ]]handler)(...)
+    end
+end
+
+return Event
