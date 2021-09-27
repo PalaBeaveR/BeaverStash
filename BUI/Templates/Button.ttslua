@@ -1,0 +1,31 @@
+local BUI = require("BeaverStash.BUI")
+
+---@class bs__BUIButton : bs__BUIElement
+local BUIButton = {}
+
+---@param text string
+function BUIButton:setText(text)
+    self:setAttribute("text", text)
+end
+
+---@return string
+function BUIButton:getText()
+    return self:getAttribute("text")
+end
+
+---@param interactable boolean
+function BUIButton:setInteractable(interactable)
+    self:setAttribute("interactable", interactable)
+end
+
+---@return boolean
+function BUIButton:getInteractable()
+    return self:getAttribute("interactable")
+end
+
+return BUI.registerTemplate("BUIButton", {
+    tag = "Button",
+    attributes = {
+        colors = "#f05d5e|#72DDF7|#F4F4ED|#343F3E"
+    }
+}, BUIButton)

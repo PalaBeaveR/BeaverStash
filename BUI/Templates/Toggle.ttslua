@@ -1,0 +1,51 @@
+local BUI = require("BeaverStash.BUI")
+
+---@class bs__BUIToggle : bs__BUIElement
+local BUIToggle = {}
+
+---@param text string
+function BUIToggle:setText(text)
+    self:setAttribute("text", text)
+end
+
+---@return string
+function BUIToggle:getText()
+    return self:getAttribute("text")
+end
+
+---@param isOn boolean
+function BUIToggle:setIsOn(isOn)
+    self:setAttribute("isOn", isOn)
+end
+
+---@return boolean
+function BUIToggle:getIsOn()
+    return self:getAttribute("isOn")
+end
+
+---@param player tts__Player
+---@param isOn boolean
+function BUIToggle:__onValueChanged(player, isOn)
+    self:setIsOn(isOn=="True")
+end
+
+function BUIToggle:___onInit()
+    self:setAttribute("text", "Placeholder") -- if the toggle is created without the text attribute then changing it during runtime doesn't result in anything
+end
+
+---@param interactable boolean
+function BUIToggle:setInteractable(interactable)
+    self:setAttribute("interactable", interactable)
+end
+
+---@return boolean
+function BUIToggle:getInteractable()
+    return self:getAttribute("interactable")
+end
+
+return BUI.registerTemplate("BUIToggle", {
+    tag = "Toggle",
+    attributes = {
+        colors = "#909090|#a0a0a0|#505050|#909090"
+    }
+}, BUIToggle)

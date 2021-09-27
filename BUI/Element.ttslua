@@ -1,0 +1,274 @@
+local XmlTools = require("BeaverStash.XmlTools")
+---@type bs__BUI
+local BUI
+
+---@class bs__BUIElement
+---@field id string
+---@field template string
+---@field attributes table<string, any>
+---@field parent bs__BUIElement
+---@field children bs__BUIElement[]
+---@field rendered boolean
+---@field color tts__PlayerColor
+---@field onClick fun(player: tts__Player, button: "-3" | "-2" | "-1" | "1" | "2" | "3", id: string)
+---@field __onClick fun(player: tts__Player, button: "-3" | "-2" | "-1" | "1" | "2" | "3", id: string)
+---@field ___onInit fun()
+local BUIElement = {}
+BUIElement.__index = BUIElement
+
+---@param parent bs__BUIElement
+function BUIElement:setParent(parent)
+    if (parent.__isElementSeatManager) then
+        if self.color then
+            parent = parent:getElement(self.color)
+        else
+            return
+        end
+    end
+    if self.parent == parent then return end
+
+    if self.parent ~= nil then
+        local foundAt = Table.find(self.parent.children, self)
+        table.remove(self.parent.children, foundAt)
+    end
+
+    self.parent = parent
+
+    table.insert(self.parent.children, self)
+
+    BUI.scheduleUIRender()
+end
+
+function BUIElement:getParent()
+    return self.parent
+end
+
+---@param name string
+---@param value any
+function BUIElement:setAttribute(name, value)
+    self.attributes[name] = value
+    if self.rendered then
+        UI.setAttribute(self.id, name, XmlTools.luaValueToXmlValue(value))
+    end
+end
+---@param name string
+---@return any
+function BUIElement:getAttribute(name)
+    return --[[---@type any]]self.attributes[name]
+end
+
+---@param width number
+function BUIElement:setWidth(width)
+    self:setAttribute("width", width)
+end
+---@return number
+function BUIElement:getWidth()
+    return self:getAttribute("width")
+end
+
+---@param height number
+function BUIElement:setHeight(height)
+    self:setAttribute("height", height)
+end
+
+---@return number
+function BUIElement:getHeight()
+    return self:getAttribute("height")
+end
+
+---@param width number
+---@param height number
+function BUIElement:setSize(width, height)
+    self:setWidth(width)
+    self:setHeight(height)
+end
+
+---@return number, number
+function BUIElement:getSize()
+    return self:getWidth(), self:getHeight()
+end
+
+---@param minWidth number
+function BUIElement:setMinWidth(minWidth)
+    self:setAttribute("minWidth", minWidth)
+end
+---@return number
+function BUIElement:getMinWidth()
+    return self:getAttribute("minWidth")
+end
+
+---@param minHeight number
+function BUIElement:setMinHeight(minHeight)
+    self:setAttribute("minHeight", minHeight)
+end
+
+---@return number
+function BUIElement:getMinHeight()
+    return self:getAttribute("minHeight")
+end
+
+---@param minWidth number
+---@param minHeight number
+function BUIElement:setMinSize(minWidth, minHeight)
+    self:setMinWidth(minWidth)
+    self:setMinHeight(minHeight)
+end
+
+---@return number, number
+function BUIElement:getMinSize()
+    return self:getMinWidth(), self:getMinHeight()
+end
+
+---@param x number
+function BUIElement:setX(x)
+    self:setAttribute("offsetXY", { x, self.attributes.offsetXY[2] })
+end
+---@return number
+function BUIElement:getX()
+    return --[[---@type number]]self:getAttribute("offsetXY")[1]
+end
+
+---@param y number
+function BUIElement:setY(y)
+    self:setAttribute("offsetXY", { self.attributes.offsetXY[1], y })
+end
+
+---@return number
+function BUIElement:getY()
+    return --[[---@type number]]self:getAttribute("offsetXY")[2]
+end
+
+---@param x number
+---@param y number
+function BUIElement:setPos(x, y)
+    self:setAttribute("offsetXY", { x, y })
+end
+
+---@return number, number
+function BUIElement:getPos()
+    return --[[---@type number, number]]table.unpack(self:getAttribute("offsetXY"))
+end
+
+---@param color tts__Color
+function BUIElement:setBackgroundColor(color)
+    self:setAttribute("color", "#".. color:toHex(true))
+end
+
+---@return tts__Color
+function BUIElement:getBackgroundColor()
+    return self:getAttribute("color")
+end
+
+---@param vis string[]
+function BUIElement:setVisibility(vis)
+    self:setAttribute("visibility", table.concat(vis, " | "))
+end
+
+---@return string[]
+function BUIElement:getVisibility()
+    error("IMPLEMENT A VARARG TYPE FOR BUI")
+    return self:getAttribute("visibility")
+end
+
+---@param active boolean
+function BUIElement:setActive(active)
+    self:setAttribute("active", active)
+end
+
+---@return boolean
+function BUIElement:getActive()
+    return self:getAttribute("active")
+end
+
+---@param contentSizeFitter "vertical" | "horizontal" | "both" | "none"
+function BUIElement:setContentSizeFitter(contentSizeFitter)
+    self:setAttribute("contentSizeFitter", contentSizeFitter)
+end
+
+---@return boolean
+function BUIElement:getContentSizeFitter()
+    return self:getAttribute("contentSizeFitter")
+end
+
+---@param allowDragging boolean
+function BUIElement:setAllowDragging(allowDragging)
+    self:setAttribute("allowDragging", allowDragging)
+end
+
+---@return boolean
+function BUIElement:getAllowDragging()
+    return self:getAttribute("allowDragging")
+end
+
+---@param returnToOriginalPositionWhenReleased boolean
+function BUIElement:setReturnToOriginalPositionWhenReleased(returnToOriginalPositionWhenReleased)
+    self:setAttribute("returnToOriginalPositionWhenReleased", returnToOriginalPositionWhenReleased)
+end
+
+---@return boolean
+function BUIElement:getReturnToOriginalPositionWhenReleased()
+    return self:getAttribute("returnToOriginalPositionWhenReleased")
+end
+
+---@param ignoreLayout boolean
+function BUIElement:setIgnoreLayout(ignoreLayout)
+    self:setAttribute("ignoreLayout", ignoreLayout)
+end
+
+---@return boolean
+function BUIElement:getIgnoreLayout()
+    return self:getAttribute("ignoreLayout")
+end
+
+---@param v number
+---@param h number
+function BUIElement:setPivot(v, h)
+    self:setAttribute("pivot", { v, h })
+end
+
+---@return boolean
+function BUIElement:getPivot()
+    return self:getAttribute("pivot")
+end
+
+---@param rectAlignment string
+function BUIElement:setRectAlignment(rectAlignment)
+    self:setAttribute("rectAlignment", rectAlignment)
+end
+
+---@return boolean
+function BUIElement:getRectAlignment()
+    return self:getAttribute("rectAlignment")
+end
+
+---@param key string
+---@param value
+function BUIElement:__newindex(key, value)
+    rawset(self, key, value)
+    self:setupEvent(key)
+end
+
+---@param event string
+function BUIElement:setupEvent(event)
+    local eventName = --[[---@type string]]event:match("^_?_?(on.*)")
+    if not eventName then return end
+
+    local funcName = eventName.. self.id
+    self:setAttribute(eventName, funcName)
+    ;(--[[---@type table ]]_G)[funcName] = function(...)
+        local s = --[[---@type table<string, function>]]self
+
+        if s["__".. eventName] then
+            s["__".. eventName](s, ...)
+        end
+        if s[eventName] then
+            s[eventName](s, ...)
+        end
+    end
+end
+
+---@param bui bs__BUI
+return function(bui)
+    BUI = bui
+    return BUIElement
+end

@@ -1,0 +1,42 @@
+local BUI = require("BeaverStash.BUI")
+
+---@class bs__BUIText : bs__BUIElement
+local BUIText = {}
+
+---@param text string
+function BUIText:setText(text)
+    self:setAttribute("text", text)
+end
+
+---@return string
+function BUIText:getText()
+    return self:getAttribute("text")
+end
+
+
+---@param color tts__Color
+function BUIText:setTextColor(color)
+    self:setAttribute("color", color)
+end
+
+---@return string
+function BUIText:getTextColor()
+    return self:getAttribute("color")
+end
+
+---@param fontSize number
+function BUIText:setFontSize(fontSize)
+    self:setAttribute("fontSize", fontSize)
+end
+
+---@return number
+function BUIText:getFontSize()
+    return self:getAttribute("fontSize")
+end
+
+return BUI.registerTemplate("BUIText", {
+    tag = "Text",
+    attributes = {
+
+    }
+}, BUIText)

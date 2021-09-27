@@ -1,0 +1,19 @@
+local BUI = require("BeaverStash.BUI")
+
+require("BeaverStash.BUI.Templates.CloseButton")
+require("BeaverStash.BUI.Templates.VerticalLayout")
+
+---@class bs__BUIWindow : bs__BUIVerticalLayout
+---@field closeButton bs__BUICloseButton
+local BUIWindow = {}
+
+function BUIWindow:___onInit()
+    self.closeButton = BUI.createElement("BUICloseButton", self.id.. "CloseButton", self)
+end
+
+return BUI.registerTemplate("BUIWindow", {
+    tag = "VerticalLayout",
+    attributes = {
+        color = "#3772FF"
+    }
+}, BUIWindow, "BUIVerticalLayout")

@@ -1,0 +1,26 @@
+local BUI = require("BeaverStash.BUI")
+
+require("BeaverStash.BUI.Templates.Button")
+
+---@class bs__BUICloseButton : bs__BUIButton
+local BUICloseButton = {}
+
+---@param player tts__Player
+---@param button "-1" | "-2" | "-3" | "1" | "2" | "3"
+---@param id string
+function BUICloseButton:__onClick(player, button, id)
+    self.parent:setActive(false)
+end
+
+return BUI.registerTemplate("BUICloseButton", {
+    tag = "Button",
+    attributes = {
+        colors = "#909090|#a0a0a0|#505050|#909090",
+        ignoreLayout = "true",
+        rectAlignment = "UpperRight",
+        offsetXY = "-5 -5",
+        text = "X",
+        width = "20",
+        height = "20"
+    }
+}, BUICloseButton, "BUIButton")

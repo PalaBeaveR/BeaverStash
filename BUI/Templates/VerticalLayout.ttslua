@@ -1,0 +1,43 @@
+local BUI = require("BeaverStash.BUI")
+require("BeaverStash.BUI.Templates.Panel")
+
+---@class bs__BUIVerticalLayout : bs__BUIPanel
+local BUIVerticalLayout = {}
+
+---@param childForceExpandWidth boolean
+function BUIVerticalLayout:setChildForceExpandWidth(childForceExpandWidth)
+    self:setAttribute("childForceExpandWidth", childForceExpandWidth)
+end
+
+---@return boolean
+function BUIVerticalLayout:getChildForceExpandWidth()
+    return self:getAttribute("childForceExpandWidth")
+end
+
+---@param childForceExpandHeight boolean
+function BUIVerticalLayout:setChildForceExpandHeight(childForceExpandHeight)
+    self:setAttribute("childForceExpandHeight", childForceExpandHeight)
+end
+
+---@return boolean
+function BUIVerticalLayout:getChildForceExpandHeight()
+    return self:getAttribute("childForceExpandHeight")
+end
+
+---@param spacing number
+function BUIVerticalLayout:setSpacing(spacing)
+    self:setAttribute("spacing", spacing)
+end
+
+---@return number
+function BUIVerticalLayout:getSpacing()
+    return self:getAttribute("spacing")
+end
+
+
+return BUI.registerTemplate("BUIVerticalLayout", {
+    tag = "VerticalLayout",
+    attributes = {
+        color = "#909090"
+    }
+}, BUIVerticalLayout, "BUIPanel")

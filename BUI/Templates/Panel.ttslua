@@ -1,0 +1,33 @@
+local BUI = require("BeaverStash.BUI")
+
+---@class bs__BUIPanel : bs__BUIElement
+local BUIPanel = {}
+
+---@overload fun(left_right_top_bottom: number)
+---@overload fun(left: number, right_top_bottom: number)
+---@overload fun(left: number, right: number, top_bottom: number)
+---@param left number
+---@param right number
+---@param top number
+---@param bottom number
+function BUIPanel:setPadding(left, right, top, bottom)
+    ---@type number[]
+    local padding = {left, right, top, bottom}
+    local lastPadding = padding[#padding]
+    for i = #padding+1, 4 do
+        table.insert(padding, lastPadding)
+    end
+    self:setAttribute("padding", padding)
+end
+
+---@return number[]
+function BUIPanel:getPadding()
+    return self:getAttribute("padding")
+end
+
+return BUI.registerTemplate("BUIPanel", {
+    tag = "Panel",
+    attributes = {
+        color = "#909090"
+    }
+}, BUIPanel)

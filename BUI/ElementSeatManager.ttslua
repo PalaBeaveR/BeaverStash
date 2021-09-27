@@ -1,0 +1,62 @@
+local XmlTools = require("BeaverStash.XmlTools")
+---@type bs__BUI
+local BUI
+
+---@class bs__BUIElementSeatManager<T>
+---@field id string
+---@field template string
+---@field parent bs__BUIElement
+---@field elements table<tts__PlayerColor, T>
+---@overload fun(ops: table) : bs__BUIElementSeatManager<T>
+local BUIElementSeatManager   = {
+    __isElementSeatManager = true
+}
+BUIElementSeatManager.__index = BUIElementSeatManager
+
+setmetatable(BUIElementSeatManager, {
+    ---@param ops table
+    __call = function(self, ops)
+        ops = ops or {}
+
+        setmetatable(ops, BUIElementSeatManager)
+
+        ops.elements = ops.elements or {}
+        for k, v in pairs(Player.getColors()) do
+            local el = BUI.createElement(ops.template, ops.id.. v, ops.parent)
+            el.color = v
+            ops.elements[v] = el
+        end
+
+        return --[[---@type bs__BUIElement ]]ops
+    end
+})
+
+---@param parent bs__BUIElement
+function BUIElementSeatManager:setParent(parent)
+    self.parent = parent
+    for k, v in pairs(self.elements) do
+        (--[[---@type bs__BUIElement ]]v):setParent(parent)
+    end
+end
+
+function BUIElementSeatManager:getParent()
+    return self.parent
+end
+
+---@param func fun(el: T)
+function BUIElementSeatManager:executeOnAll(func)
+    for k, v in pairs(self.elements) do
+        func(v)
+    end
+end
+
+---@param seat tts__PlayerColor
+function BUIElementSeatManager:getElement(seat)
+    return self.elements[seat]
+end
+
+---@param bui bs__BUI
+return function(bui)
+    BUI = bui
+    return BUIElementSeatManager
+end
