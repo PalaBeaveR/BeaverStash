@@ -27,7 +27,7 @@ function BUI.buildElement(elem)
     ---@type table[]
     local children = {}
 
-    for k, v in pairs(elem.children) do
+    for k, v in ipairs(elem.children) do
         table.insert(children, BUI.buildElement(v))
     end
 
