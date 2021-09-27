@@ -1,0 +1,22 @@
+---@class bs__XmlTools
+local XmlTools = {}
+
+---@param value any
+---@return string
+function XmlTools.luaValueToXmlValue(value)
+    if type(value) == "number" then
+        return tostring(value)
+    elseif type(value) == "boolean" then
+        return (value and "True") or "False"
+    elseif value.__isColor then
+        return "#".. value:toHex(true)
+    elseif value.__isVector then
+        return table.concat({value:get()}, ", ")
+    elseif type(value) == "table" and getmetatable(value) == nil then
+        return table.concat(value, " ")
+    else
+        return tostring(value)
+    end
+end
+
+return XmlTools
