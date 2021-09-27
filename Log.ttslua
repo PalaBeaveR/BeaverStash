@@ -1,3 +1,5 @@
+local Table = require("BeaverStash.Table")
+
 
 ---@class bs__Log
 ---@field VERBOSE fun(msg: string, ...: string)
@@ -5,9 +7,11 @@
 ---@field ERROR fun(msg: string, ...: string)
 local Log = {}
 
----@alias bs__LogLevel 0 | 1 | 2
+---@alias bs__LogLevelInt 0 | 1 | 2
+---@alias bs__LogLevelString "VERBOSE" | "INFO" | "ERROR"
 
-Log.Level = {
+---@type table<bs__LogLevelString, bs__LogLevelInt>
+Log.Levels = {
     VERBOSE = 0,
     INFO = 1,
     ERROR = 2,
@@ -15,44 +19,41 @@ Log.Level = {
 
 local curFilterLevel = 1
 
----@param level bs__LogLevel
+---@param level bs__LogLevelInt
 function Log.setFilterLevel(level)
     curFilterLevel = level
 end
 
-for k, v in pairs(Log.Level) do
-    ;(--[[---@type table ]]Log)[k] = function(msg, ...)
-        if Log.Level[k] >= curFilterLevel then
-            log(("[%s] "):format(k).. msg:format(...))
+setmetatable(Log, {
+    ---@param level bs__LogLevelString
+    ---@param message string
+    ---@vararg any
+    ---@overload fun(level: bs__LogLevelInt, message: string, ...: any)
+    __call = function(self, level, message, ...)
+        if curFilterLevel <= Log.Levels[level] then
+            local vararg = Table.map({...}, function(key, value)
+                return logString(value)
+            end)
+
+            if type(level) == "number" then
+                level = Table.find(Log.Levels, --[[---@type bs__LogLevelInt ]]level)
+            end
+
+            table.insert(vararg, 1, level)
+
+            log(("[%s] ".. message):format(table.unpack(vararg)))
         end
     end
-end
-
----@param msg string
----@vararg string
-function Log.ERROR(msg, ...)
-    if Log.Level.ERROR >= curFilterLevel then
-        log("[ERROR] ".. msg:format(...))
-        print("[ERROR] ".. msg:format(...))
-    end
-end
+})
 
 ---@param condition boolean
 ---@param msg string
 ---@vararg string
-function Log.ASSERT(condition, msg, ...)
+function Log.assert(condition, msg, ...)
     if condition then
         error(msg:format(...), 1)
     end
 end
 
----@param condition boolean
----@param msg string
----@vararg string
-function Log.ASSERT_U(condition, msg, ...)
-    if condition then
-        error(msg:format(...), 0)
-    end
-end
 
 return Log
