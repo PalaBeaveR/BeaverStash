@@ -2,6 +2,20 @@
 ---@class bs__Table
 local Table = {}
 
+---@generic K, V, R
+---@param tbl table<K, V>
+---@param func fun(key: K, value: V) : R
+---@overload fun<V, R>(tbl: any[], func: fun(key: number, value: V) : R) : R[]
+function Table.map(tbl, func)
+    ---@type table<K, R>
+    local mapped = {}
+    for k, v in Table.iter(tbl) do
+        mapped[k] = func(k, v)
+    end
+
+    return mapped
+end
+
 function Table.findValue() end
 
 function Table.isArray(tbl)
